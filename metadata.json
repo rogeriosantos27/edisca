@@ -1,0 +1,6 @@
+{
+  "name": "EDISCA - Jogo Educativo",
+  "description": "Uma aventura educativa pelos caminhos da EDISCA. Interaja com os professores, conheça a rotina da escola e resolva desafios operacionais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
