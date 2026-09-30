@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Player, QuestState, Question } from './types';
 import { questsData } from './data/quests';
 import { getRandomQuestionsForRoom } from './data/questionBank';
@@ -6,6 +6,15 @@ import { npcLocations, TILE } from './data/npcs';
 import { CanvasGame } from './components/CanvasGame';
 import { MiniMap } from './components/MiniMap';
 import { SectorsModal } from './components/SectorsModal';
+import { ResetConfirmModal } from './components/ResetConfirmModal';
+import {
+  loadGameSave,
+  saveGame,
+  clearGameSave,
+  hasActiveProgress,
+  SavedGame,
+  getCompletedQuestsCount
+} from './utils/storage';
 import {
   playInteractSound,
   playCorrectSound,
@@ -17,20 +26,37 @@ import {
 } from './utils/audio';
 
 export default function App() {
-  const [gameStarted, setGameStarted] = useState(false);
-  const [playerNameInput, setPlayerNameInput] = useState("Bailarino(a)");
+  const initialSaveRef = useRef<SavedGame | null>(loadGameSave());
+  const [savedGame, setSavedGame] = useState<SavedGame | null>(() => initialSaveRef.current);
 
-  const [player, setPlayer] = useState<Player>({
-    name: "Bailarino(a)",
-    x: 35 * TILE,
-    y: 15 * TILE,
-    width: 24,
-    height: 38,
-    speed: 8,
-    score: 0
+  const [gameStarted, setGameStarted] = useState(() => {
+    // If the player was in an active game session, automatically return right to where they were!
+    return !!initialSaveRef.current?.gameStarted;
+  });
+
+  const [playerNameInput, setPlayerNameInput] = useState(() => {
+    return initialSaveRef.current?.player?.name || "Bailarino(a)";
+  });
+
+  const [player, setPlayer] = useState<Player>(() => {
+    if (initialSaveRef.current?.player) {
+      return initialSaveRef.current.player;
+    }
+    return {
+      name: "Bailarino(a)",
+      x: 35 * TILE,
+      y: 15 * TILE,
+      width: 24,
+      height: 38,
+      speed: 8,
+      score: 0
+    };
   });
 
   const [questState, setQuestState] = useState<QuestState>(() => {
+    if (initialSaveRef.current?.questState) {
+      return initialSaveRef.current.questState;
+    }
     const state: QuestState = {};
     for (let key in questsData) {
       state[key] = { currentQ: 0, completed: false };
@@ -39,7 +65,12 @@ export default function App() {
   });
 
   // Active session randomized questions for each sector
-  const [roomQuestions, setRoomQuestions] = useState<Record<string, Question[]>>({});
+  const [roomQuestions, setRoomQuestions] = useState<Record<string, Question[]>>(() => {
+    if (initialSaveRef.current?.roomQuestions && Object.keys(initialSaveRef.current.roomQuestions).length > 0) {
+      return initialSaveRef.current.roomQuestions;
+    }
+    return {};
+  });
 
   const [activeNPC, setActiveNPC] = useState<string | null>(null);
 
@@ -53,6 +84,73 @@ export default function App() {
   const [isMuted, setIsMuted] = useState(() => getIsMuted());
   const [isMiniMapOpen, setIsMiniMapOpen] = useState(false);
   const [isSectorsModalOpen, setIsSectorsModalOpen] = useState(false);
+  const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [savePulse, setSavePulse] = useState(false);
+
+  // Toast notifying player their session was seamlessly restored
+  const [resumeToast, setResumeToast] = useState<string | null>(() => {
+    if (initialSaveRef.current?.gameStarted) {
+      const c = getCompletedQuestsCount(initialSaveRef.current.questState);
+      return `Progresso restaurado! Você está onde parou (${c}/16 selos).`;
+    }
+    return null;
+  });
+
+  useEffect(() => {
+    if (resumeToast) {
+      const timer = setTimeout(() => setResumeToast(null), 4500);
+      return () => clearTimeout(timer);
+    }
+  }, [resumeToast]);
+
+  // Keep references synced for auto-save and beforeunload
+  const playerRef = useRef(player);
+  playerRef.current = player;
+  const questStateRef = useRef(questState);
+  questStateRef.current = questState;
+  const roomQuestionsRef = useRef(roomQuestions);
+  roomQuestionsRef.current = roomQuestions;
+  const gameStartedRef = useRef(gameStarted);
+  gameStartedRef.current = gameStarted;
+
+  // Immediate save on critical gameplay updates (score, completed quests, questions)
+  useEffect(() => {
+    if (!gameStarted) return;
+    saveGame(player, questState, roomQuestions, true);
+    setSavePulse(true);
+    const t = setTimeout(() => setSavePulse(false), 1800);
+    return () => clearTimeout(t);
+  }, [player.score, questState, roomQuestions, gameStarted]);
+
+  // Periodic position auto-save (every 2.5s while playing)
+  useEffect(() => {
+    if (!gameStarted) return;
+    const interval = setInterval(() => {
+      saveGame(playerRef.current, questStateRef.current, roomQuestionsRef.current, true);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, [gameStarted]);
+
+  // Always save immediately on page reload, tab close, or app switch
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (gameStartedRef.current) {
+        saveGame(playerRef.current, questStateRef.current, roomQuestionsRef.current, true);
+      }
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden' && gameStartedRef.current) {
+        saveGame(playerRef.current, questStateRef.current, roomQuestionsRef.current, true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   // Key controls state
   const [keys, setKeys] = useState({
@@ -185,7 +283,22 @@ export default function App() {
 
   const handleStartGame = () => {
     const cleanName = playerNameInput.trim() || "Bailarino(a)";
-    setPlayer(prev => ({ ...prev, name: cleanName }));
+    const newPlayer = {
+      name: cleanName,
+      x: 35 * TILE,
+      y: 15 * TILE,
+      width: 24,
+      height: 38,
+      speed: 8,
+      score: 0
+    };
+    setPlayer(newPlayer);
+
+    const freshState: QuestState = {};
+    for (let key in questsData) {
+      freshState[key] = { currentQ: 0, completed: false };
+    }
+    setQuestState(freshState);
 
     // Generate a fresh random question pool for all rooms
     const freshQuestions: Record<string, Question[]> = {};
@@ -194,6 +307,45 @@ export default function App() {
     }
     setRoomQuestions(freshQuestions);
     setGameStarted(true);
+
+    saveGame(newPlayer, freshState, freshQuestions, true);
+    setSavedGame({
+      version: 1,
+      player: newPlayer,
+      questState: freshState,
+      roomQuestions: freshQuestions,
+      gameStarted: true,
+      savedAt: Date.now()
+    });
+  };
+
+  const handleConfirmReset = () => {
+    clearGameSave();
+    setSavedGame(null);
+    const resetPlayer = {
+      name: playerNameInput.trim() || "Bailarino(a)",
+      x: 35 * TILE,
+      y: 15 * TILE,
+      width: 24,
+      height: 38,
+      speed: 8,
+      score: 0
+    };
+    setPlayer(resetPlayer);
+    const freshState: QuestState = {};
+    for (let key in questsData) {
+      freshState[key] = { currentQ: 0, completed: false };
+    }
+    setQuestState(freshState);
+    const freshQuestions: Record<string, Question[]> = {};
+    for (let key in questsData) {
+      freshQuestions[key] = getRandomQuestionsForRoom(key, 5);
+    }
+    setRoomQuestions(freshQuestions);
+    setGameStarted(false);
+    setIsResetModalOpen(false);
+    setDialogOpen(false);
+    setResumeToast(null);
   };
 
   const startChallenge = () => {
@@ -286,7 +438,7 @@ export default function App() {
     <div id="game-wrapper" className="fixed inset-0 w-full h-full overflow-hidden bg-[#142018] font-['Nunito',sans-serif] select-none touch-none">
       {/* Start Screen */}
       {!gameStarted && (
-        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-4 bg-gradient-to-b from-[#7fe3d4] via-[#4ecdc4] to-[#21665c]">
+        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center p-4 bg-gradient-to-b from-[#7fe3d4] via-[#4ecdc4] to-[#21665c] overflow-y-auto">
           <h1 className="font-['Baloo_2',sans-serif] font-extrabold text-5xl sm:text-6xl md:text-7xl text-[#ffe66d] drop-shadow-[3px_3px_0px_#ff6b6b] mb-2 text-center tracking-wide">
             EDISCA
           </h1>
@@ -294,21 +446,66 @@ export default function App() {
             Uma aventura educativa pelos caminhos da EDISCA.
           </h2>
 
-          <div className="bg-[rgba(32,38,46,0.92)] backdrop-blur-md border-4 border-[#ffe66d] rounded-2xl p-6 sm:p-8 w-full max-w-[400px] text-center shadow-2xl">
-            <p className="mb-3 text-[#ffe66d] font-bold text-base sm:text-lg">Identifique-se, educando(a):</p>
-            <input
-              type="text"
-              value={playerNameInput}
-              onChange={(e) => setPlayerNameInput(e.target.value)}
-              maxLength={15}
-              className="w-full p-3 rounded-xl border-3 border-[#4ecdc4] text-lg sm:text-xl font-extrabold text-center mb-6 outline-none bg-white text-[#292f36] focus:border-[#ffe66d] focus:ring-4 focus:ring-[#ffe66d]/30"
-            />
-            <button
-              onClick={handleStartGame}
-              className="w-full bg-gradient-to-b from-[#ff8a8a] to-[#ff6b6b] hover:brightness-110 active:scale-98 text-white font-['Baloo_2',sans-serif] font-extrabold text-lg sm:text-xl py-3 px-6 rounded-xl border-3 border-[#292f36] shadow-[0_5px_0_#292f36] active:translate-y-1 active:shadow-none uppercase tracking-wider cursor-pointer transition-all"
-            >
-              Iniciar Aventura
-            </button>
+          <div className="bg-[rgba(32,38,46,0.92)] backdrop-blur-md border-4 border-[#ffe66d] rounded-2xl p-6 sm:p-8 w-full max-w-[420px] text-center shadow-2xl">
+            {savedGame && hasActiveProgress(savedGame) ? (
+              <>
+                <div className="bg-[#15191e] border-2 border-[#4ecdc4]/60 rounded-xl p-4 mb-5 text-left shadow-inner">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-black uppercase tracking-wider text-[#4ecdc4] flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-[#4ecdc4] animate-ping" />
+                      Progresso Salvo
+                    </span>
+                    <span className="text-xs text-white/60">
+                      {new Date(savedGame.savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div className="font-['Baloo_2',sans-serif] font-bold text-2xl text-[#ffe66d]">
+                    {savedGame.player.name}
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 text-xs sm:text-sm font-semibold text-white/80">
+                    <span className="text-[#ffe66d]">⭐ {savedGame.player.score} pontos</span>
+                    <span>•</span>
+                    <span className="text-[#4ecdc4]">{getCompletedQuestsCount(savedGame.questState)} de 16 selos</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => {
+                      setGameStarted(true);
+                      setResumeToast(`Bem-vindo(a) de volta, ${player.name}!`);
+                    }}
+                    className="w-full bg-gradient-to-b from-[#4ecdc4] to-[#20a39e] hover:brightness-110 active:scale-98 text-white font-['Baloo_2',sans-serif] font-extrabold text-lg sm:text-xl py-3.5 px-6 rounded-xl border-3 border-[#292f36] shadow-[0_5px_0_#292f36] active:translate-y-1 active:shadow-none uppercase tracking-wider cursor-pointer transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>▶️</span> Continuar Onde Parei
+                  </button>
+
+                  <button
+                    onClick={() => setIsResetModalOpen(true)}
+                    className="w-full bg-white/10 hover:bg-white/20 active:scale-98 text-red-300 hover:text-red-200 font-['Baloo_2',sans-serif] font-bold text-sm py-2.5 px-4 rounded-xl border-2 border-red-400/40 cursor-pointer transition-all flex items-center justify-center gap-1.5"
+                  >
+                    <span>🔄</span> Reiniciar Progresso
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="mb-3 text-[#ffe66d] font-bold text-base sm:text-lg">Identifique-se, educando(a):</p>
+                <input
+                  type="text"
+                  value={playerNameInput}
+                  onChange={(e) => setPlayerNameInput(e.target.value)}
+                  maxLength={15}
+                  className="w-full p-3 rounded-xl border-3 border-[#4ecdc4] text-lg sm:text-xl font-extrabold text-center mb-6 outline-none bg-white text-[#292f36] focus:border-[#ffe66d] focus:ring-4 focus:ring-[#ffe66d]/30"
+                />
+                <button
+                  onClick={handleStartGame}
+                  className="w-full bg-gradient-to-b from-[#ff8a8a] to-[#ff6b6b] hover:brightness-110 active:scale-98 text-white font-['Baloo_2',sans-serif] font-extrabold text-lg sm:text-xl py-3 px-6 rounded-xl border-3 border-[#292f36] shadow-[0_5px_0_#292f36] active:translate-y-1 active:shadow-none uppercase tracking-wider cursor-pointer transition-all"
+                >
+                  Iniciar Aventura
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -390,6 +587,28 @@ export default function App() {
                 <span>🏆</span> {completedCount}/16
                 <span className="text-[10px] text-white/70">{showSectorIcons ? '▲' : '▼'}</span>
               </button>
+
+              {/* Reset Game Button (Opens Confirmation Modal) */}
+              <button
+                onClick={() => setIsResetModalOpen(true)}
+                title="Reiniciar aventura do início (requer confirmação)"
+                className="bg-[rgba(32,38,46,0.92)] backdrop-blur-md border-3 border-red-400/70 hover:border-red-400 rounded-xl px-2 sm:px-2.5 h-8 sm:h-10 flex items-center justify-center text-[11px] sm:text-xs font-bold text-red-300 font-['Baloo_2',sans-serif] active:scale-95 transition-all cursor-pointer shadow-lg hover:bg-red-500/20 gap-1"
+              >
+                <span>🔄</span> <span className="hidden sm:inline">Reiniciar</span>
+              </button>
+
+              {/* Auto-save Status Indicator */}
+              <div
+                title="Progresso salvo automaticamente no navegador"
+                className={`bg-[rgba(32,38,46,0.92)] backdrop-blur-md border-2 rounded-xl px-2 sm:px-2.5 h-8 sm:h-10 flex items-center justify-center text-[10px] sm:text-xs font-bold transition-all duration-300 gap-1 select-none ${
+                  savePulse
+                    ? 'border-[#4ecdc4] text-[#4ecdc4] bg-[#4ecdc4]/20 scale-105 shadow-[0_0_8px_#4ecdc4]'
+                    : 'border-white/20 text-white/60'
+                }`}
+              >
+                <span>💾</span>
+                <span className="hidden md:inline">{savePulse ? 'Salvando...' : 'Salvo ✓'}</span>
+              </div>
             </div>
 
             {/* Collapsible 16 Sector Badges row */}
@@ -597,6 +816,31 @@ export default function App() {
               </div>
             </>
           )}
+
+          {/* Welcome Back / Progress Restored Banner */}
+          {resumeToast && (
+            <div className="fixed top-14 sm:top-16 left-1/2 -translate-x-1/2 z-30 bg-gradient-to-r from-[#1f262e] to-[#15191e] border-2 border-[#4ecdc4] text-[#4ecdc4] px-4 py-2 rounded-full shadow-2xl font-['Baloo_2',sans-serif] font-bold text-xs sm:text-sm flex items-center gap-2 animate-in fade-in slide-in-from-top-4 duration-300 pointer-events-auto">
+              <span>💾</span>
+              <span className="text-white font-medium">{resumeToast}</span>
+              <button
+                onClick={() => setResumeToast(null)}
+                className="ml-1 w-5 h-5 rounded-full hover:bg-white/10 text-white/70 flex items-center justify-center text-xs cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
+          {/* Reset Confirmation Modal */}
+          <ResetConfirmModal
+            isOpen={isResetModalOpen}
+            onClose={() => setIsResetModalOpen(false)}
+            onConfirm={handleConfirmReset}
+            playerName={player.name}
+            score={player.score}
+            completedCount={completedCount}
+            totalSectors={Object.keys(questsData).length}
+          />
 
           {/* Mini-Map Overlay */}
           <MiniMap

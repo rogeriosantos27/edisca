@@ -94,11 +94,16 @@ export const CanvasGame: React.FC<CanvasGameProps> = ({
   const leavesRef = useRef<{ x: number; y: number; speed: number; drift: number; hue: number }[]>([]);
   const fountainParticlesRef = useRef<{ x: number; y: number; vx: number; vy: number; life: number }[]>([]);
 
-  // Sync state to ref when player updates externally (e.g. initial start)
+  // Sync state to ref when player updates externally (e.g. initial start, save load, sector teleport)
   useEffect(() => {
-    posRef.current.x = player.x;
-    posRef.current.y = player.y;
-  }, [player.name]);
+    const dist = Math.hypot(posRef.current.x - player.x, posRef.current.y - player.y);
+    if (dist > 15) {
+      posRef.current.x = player.x;
+      posRef.current.y = player.y;
+      camRef.current.x = player.x;
+      camRef.current.y = player.y;
+    }
+  }, [player.x, player.y, player.name]);
 
   // Map Initialization & Offscreen Canvas Pre-rendering
   useEffect(() => {
