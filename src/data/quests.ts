@@ -117,9 +117,9 @@ export const questsData: Record<string, QuestRoom> = {
   },
   cozinha: {
     room: "Cozinha",
-    npcs: ["Profª Aurea", "Profª Daiane"],
+    npcs: ["Profª Aurea", "Prof. Galeno"],
     icon: "🍳",
-    intro: "Cheirinho de comida boa! Somos as Professoras Aurea e Daiane. Preparamos a alimentação nutritiva que dá energia para vocês dançarem. Vamos calcular nossa rotina?",
+    intro: "Cheirinho de comida boa! Somos a Professora Aurea e o Professor Galeno. Preparamos a alimentação nutritiva que dá energia para vocês dançarem. Vamos calcular nossa rotina?",
     questions: [
       {
         q: "Na cozinha, as bandejas recebem etiquetas nesta sequência: A, B, C, A, B, C, A... Qual letra aparecerá na 11ª bandeja?",
@@ -425,10 +425,10 @@ export const questsData: Record<string, QuestRoom> = {
     ]
   },
   saude: {
-    room: "Saúde",
-    npcs: ["Profª Lorena", "Profª Livia", "Prof. Rubens", "Prof. Henrique"],
+    room: "Social e Saúde",
+    npcs: ["Profª Lorena", "Profª Livia", "Prof. Rubens", "Prof. Gabriel"],
     icon: "❤️",
-    intro: "Saúde física e mental em primeiro lugar! Somos as Professoras Lorena e Livia e os Professores Rubens e Henrique. Cuidamos das lesões e do bem-estar psicológico de nossos talentos. Resolvam esses casos clínicos!",
+    intro: "Saúde física, social e mental em primeiro lugar! Somos as Professoras Lorena e Livia e os Professores Rubens e Gabriel. Cuidamos do acompanhamento social, das lesões e do bem-estar psicológico de nossos talentos. Resolvam esses casos clínicos!",
     questions: [
       {
         q: "Um bailarino torceu o tornozelo na aula. Para estancar o inchaço nos primeiros 15 minutos, a fisioterapia aplica:",
@@ -437,7 +437,7 @@ export const questsData: Record<string, QuestRoom> = {
         exp: "O gelo contrai os vasos sanguíneos, diminuindo imediatamente a inflamação e a dor no momento do trauma."
       },
       {
-        q: "Na sala da saúde, a equipe acompanha quatro educandas. Sabe-se que: Kamilla está com dor no pé; Nikaelly precisa descansar; Isadora está aguardando uma avaliação; e Valentina já foi liberada. Quem deve ser atendida primeiro pela equipe?",
+        q: "No setor Social e Saúde, a equipe acompanha quatro educandas. Sabe-se que: Kamilla está com dor no pé; Nikaelly precisa descansar; Isadora está aguardando uma avaliação; e Valentina já foi liberada. Quem deve ser atendida primeiro pela equipe?",
         opts: ["Valentina", "Isadora", "Kamilla", "Nikaelly"],
         ans: 2,
         exp: "Entre as situações apresentadas, Kamilla possui uma queixa física que precisa ser avaliada antes de uma liberação ou orientação."

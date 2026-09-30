@@ -233,7 +233,7 @@ export const questionBank: Record<string, Question[]> = {
       exp: "150 educandos é o triplo de 50 (50 × 3 = 150). Triplicando os ingredientes: 2 kg × 3 = 6 kg de batata."
     },
     {
-      q: "Para garantir que os alimentos cozidos fiquem fora da zona de perigo de contaminação bacteriana, a Profª Daiane monitora a temperatura do balcão térmico. Qual deve ser a temperatura mínima dos pratos quentes?",
+      q: "Para garantir que os alimentos cozidos fiquem fora da zona de perigo de contaminação bacteriana, o Prof. Galeno monitora a temperatura do balcão térmico. Qual deve ser a temperatura mínima dos pratos quentes?",
       opts: ["20°C", "40°C", "60°C", "100°C"],
       ans: 2,
       exp: "Alimentos quentes devem ser mantidos acima de 60°C para impedir a proliferação de bactérias nocivas à saúde."
@@ -707,7 +707,7 @@ export const questionBank: Record<string, Question[]> = {
       exp: "O gelo contrai os vasos sanguíneos, diminuindo imediatamente a inflamação e a dor no momento do trauma."
     },
     {
-      q: "Na sala da saúde, a equipe acompanha quatro educandas. Sabe-se que: Kamilla está com dor no pé; Nikaelly precisa descansar; Isadora está aguardando uma avaliação; e Valentina já foi liberada. Quem deve ser atendida primeiro pela equipe?",
+      q: "No setor Social e Saúde, a equipe acompanha quatro educandas. Sabe-se que: Kamilla está com dor no pé; Nikaelly precisa descansar; Isadora está aguardando uma avaliação; e Valentina já foi liberada. Quem deve ser atendida primeiro pela equipe?",
       opts: ["Valentina", "Isadora", "Kamilla", "Nikaelly"],
       ans: 2,
       exp: "Entre as situações apresentadas, Kamilla possui uma queixa física que precisa ser avaliada antes de uma liberação ou orientação."
@@ -755,7 +755,7 @@ export const questionBank: Record<string, Question[]> = {
       exp: "A respiração diafragmática lenta estimula o sistema nervoso parassimpático, reduzindo os batimentos cardíacos e acalmando a mente."
     },
     {
-      q: "Ao carregar uma mochila pesada com livros ou equipamentos de dança, qual postura evita dores na coluna lombar?",
+      q: "Ao carregar uma mochila pesada com livros ou equipamentos de dança, o Prof. Gabriel da equipe de Social e Saúde ensina qual postura correta evita dores na coluna lombar?",
       opts: ["Usar a mochila pendurada em apenas um ombro", "Usar as duas alças bem ajustadas nas costas, distribuindo o peso igualmente nos dois ombros", "Segurar a mochila com os dentes", "Carregar na ponta dos dedos"],
       ans: 1,
       exp: "Ajustar as duas alças mantém o centro de gravidade alinhado, evitando desvios posturais e escoliose dolorosa."

@@ -33,7 +33,7 @@ export const npcLocations: Record<string, NPCLocation> = {
     y: 34 * TILE,
     npcs: [
       { name: "Profª Aurea", gender: 'F', skin: "#c68642", shirt: "#fef08a", pants: "#1c1917", hair: "#4a3018", hStyle: 3, glasses: false, badge: 'apron' },
-      { name: "Profª Daiane", gender: 'F', skin: "#ffdbac", shirt: "#fbbf24", pants: "#1e1b4b", hair: "#f59e0b", hStyle: 6, glasses: false, badge: 'apron' }
+      { name: "Prof. Galeno", gender: 'M', skin: "#e0ac69", shirt: "#fbbf24", pants: "#1e1b4b", hair: "#1c1917", hStyle: 1, glasses: false, badge: 'apron' }
     ]
   },
   reforco: {
@@ -90,7 +90,7 @@ export const npcLocations: Record<string, NPCLocation> = {
       { name: "Profª Lorena", gender: 'F', skin: "#c68642", shirt: "#2dd4bf", pants: "#134e4a", hair: "#4a3018", hStyle: 6, glasses: false, badge: 'stethoscope' },
       { name: "Profª Livia", gender: 'F', skin: "#ffdbac", shirt: "#ec4899", pants: "#4c0519", hair: "#fcd34d", hStyle: 5, glasses: true, badge: 'stethoscope' },
       { name: "Prof. Rubens", gender: 'M', skin: "#e0ac69", shirt: "#0284c7", pants: "#075985", hair: "#1c1917", hStyle: 1, glasses: true, badge: 'stethoscope' },
-      { name: "Prof. Henrique", gender: 'M', skin: "#f1c27d", shirt: "#0d9488", pants: "#115e59", hair: "#b55239", hStyle: 1, glasses: false, badge: 'stethoscope' }
+      { name: "Prof. Gabriel", gender: 'M', skin: "#f1c27d", shirt: "#0d9488", pants: "#115e59", hair: "#b55239", hStyle: 1, glasses: false, badge: 'stethoscope' }
     ]
   },
   biblioteca: {
