@@ -512,49 +512,88 @@ export const CanvasGame: React.FC<CanvasGameProps> = ({
         }
       }
 
-      // Render NPCs with bounce animation & badge icons
+      // Render NPCs with bounce animation, name chips & badge icons
       const curQuestState = questStateRef.current;
       for (let key in npcLocations) {
         let loc = npcLocations[key];
         let count = loc.npcs.length;
-        let bounce = Math.sin(now / 200 + loc.x) * 2;
-        let spacing = 18;
+        let bounce = Math.sin(now / 380 + loc.x) * 1.5;
+        let spacing = count > 3 ? 24 : 28;
         let startX = loc.x - ((count - 1) * spacing) / 2;
+        let dist = Math.hypot(posRef.current.x - loc.x, posRef.current.y - loc.y);
 
         for (let i = 0; i < count; i++) {
           let n = loc.npcs[i];
+          const npcX = startX + (i * spacing);
+          const npcY = loc.y + bounce + (i % 2 * 1.2);
+
+          // Warm welcoming magical floor aura under active quest educators
+          if (!curQuestState[key]?.completed) {
+            const haloPulse = (Math.sin(now / 320 + i) + 1) * 0.5;
+            ctx.fillStyle = `rgba(255, 230, 109, ${0.12 + haloPulse * 0.12})`;
+            ctx.beginPath();
+            ctx.ellipse(npcX + 12, npcY + 36, 12, 4.2, 0, 0, Math.PI * 2);
+            ctx.fill();
+          }
+
           drawCharacter(
             ctx,
-            startX + (i * spacing),
-            loc.y + bounce + (i % 2 * 2),
+            npcX,
+            npcY,
             n,
             false,
             now,
             'down',
             false
           );
+
+          // Floating Educator Name Tag when player gets closer (dist < 110)
+          if (dist < 110 && n.name) {
+            ctx.font = "bold 9px 'Baloo 2', sans-serif";
+            const nameWidth = ctx.measureText(n.name).width;
+            const tagW = nameWidth + 10;
+            const tagH = 14;
+            const tagX = npcX + 12 - tagW / 2;
+            const tagY = npcY - 14;
+
+            ctx.fillStyle = "rgba(21, 25, 30, 0.88)";
+            ctx.beginPath();
+            ctx.roundRect(tagX, tagY, tagW, tagH, 4);
+            ctx.fill();
+            ctx.strokeStyle = "rgba(255, 230, 109, 0.7)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = "#ffe66d";
+            ctx.textAlign = "center";
+            ctx.fillText(n.name, npcX + 12, tagY + 10);
+            ctx.textAlign = "left";
+          }
         }
 
         // Floating speech bubble when player is near NPC
-        let dist = Math.hypot(posRef.current.x - loc.x, posRef.current.y - loc.y);
         if (dist < 90 && !curDialogOpen) {
-          const bubbleY = loc.y - 38 + Math.sin(now / 220) * 2;
-          const bubbleText = curQuestState[key]?.completed ? "Selo conquistado!" : "Toque para conversar!";
+          const bubbleY = loc.y - 36 + Math.sin(now / 220) * 2;
+          const bubbleText = curQuestState[key]?.completed ? "Selo conquistado! ⭐" : "Toque para conversar! 💬";
 
           ctx.font = "bold 11px 'Baloo 2', sans-serif";
           const textW = ctx.measureText(bubbleText).width;
           const bw = textW + 16;
-          const bh = 20;
+          const bh = 22;
 
           // Shadow
-          ctx.fillStyle = "rgba(0,0,0,0.22)";
-          ctx.fillRect(loc.x - bw / 2 + 2, bubbleY - bh + 2, bw, bh);
+          ctx.fillStyle = "rgba(0,0,0,0.25)";
+          ctx.beginPath();
+          ctx.roundRect(loc.x - bw / 2 + 2, bubbleY - bh + 2, bw, bh, 8);
+          ctx.fill();
 
           ctx.fillStyle = curQuestState[key]?.completed ? "#4ecdc4" : "#ffe66d";
-          ctx.fillRect(loc.x - bw / 2, bubbleY - bh, bw, bh);
+          ctx.beginPath();
+          ctx.roundRect(loc.x - bw / 2, bubbleY - bh, bw, bh, 8);
+          ctx.fill();
           ctx.strokeStyle = "#292f36";
           ctx.lineWidth = 1.5;
-          ctx.strokeRect(loc.x - bw / 2, bubbleY - bh, bw, bh);
+          ctx.stroke();
 
           // Arrow stem
           ctx.fillStyle = curQuestState[key]?.completed ? "#4ecdc4" : "#ffe66d";
@@ -566,7 +605,7 @@ export const CanvasGame: React.FC<CanvasGameProps> = ({
 
           ctx.fillStyle = "#292f36";
           ctx.textAlign = "center";
-          ctx.fillText(bubbleText, loc.x, bubbleY - 6);
+          ctx.fillText(bubbleText, loc.x, bubbleY - 7);
           ctx.textAlign = "left";
         }
 
@@ -607,11 +646,12 @@ export const CanvasGame: React.FC<CanvasGameProps> = ({
         posRef.current.x,
         posRef.current.y,
         {
-          gender: 'M',
-          skin: '#ffdbac',
+          name: player.name || "Bailarina",
+          gender: 'F',
+          skin: '#7c4a24',
           shirt: '#18181b',
           pants: '#18181b',
-          hair: '#292524',
+          hair: '#1c1917',
           hStyle: 3,
           glasses: false
         },

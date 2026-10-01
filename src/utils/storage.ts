@@ -19,6 +19,9 @@ export function loadGameSave(): SavedGame | null {
     const data = JSON.parse(raw) as SavedGame;
     if (!data || typeof data !== 'object') return null;
     if (!data.player || typeof data.player.name !== 'string') return null;
+    if (typeof data.player.age !== 'number' || isNaN(data.player.age)) {
+      data.player.age = 10;
+    }
     if (!data.questState || typeof data.questState !== 'object') return null;
     return data;
   } catch (err) {

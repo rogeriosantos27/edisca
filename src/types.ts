@@ -3,6 +3,10 @@ export interface Question {
   opts: string[];
   ans: number;
   exp: string;
+  hint?: string;
+  difficulty?: 'facil' | 'medio' | 'avancado';
+  minAge?: number;
+  maxAge?: number;
 }
 
 export interface QuestRoom {
@@ -15,6 +19,7 @@ export interface QuestRoom {
 
 export interface NPCProfile {
   name?: string;
+  role?: string;
   gender: 'M' | 'F';
   skin: string;
   shirt: string;
@@ -41,6 +46,7 @@ export type QuestState = Record<string, QuestStateItem>;
 
 export interface Player {
   name: string;
+  age: number;
   x: number;
   y: number;
   width: number;

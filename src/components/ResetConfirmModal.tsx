@@ -5,6 +5,7 @@ interface ResetConfirmModalProps {
   onClose: () => void;
   onConfirm: () => void;
   playerName: string;
+  playerAge?: number;
   score: number;
   completedCount: number;
   totalSectors: number;
@@ -15,6 +16,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
   onClose,
   onConfirm,
   playerName,
+  playerAge,
   score,
   completedCount,
   totalSectors
@@ -40,7 +42,9 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
         <div className="bg-[#15191e] border-2 border-white/10 rounded-2xl p-4 mb-6 space-y-2 text-sm font-semibold">
           <div className="flex justify-between items-center text-white/70">
             <span>Educando(a):</span>
-            <span className="text-[#ffe66d] font-bold">{playerName}</span>
+            <span className="text-[#ffe66d] font-bold">
+              {playerName} {playerAge ? `(${playerAge} anos)` : ''}
+            </span>
           </div>
           <div className="flex justify-between items-center text-white/70">
             <span>Pontuação Atual:</span>
@@ -51,7 +55,7 @@ export const ResetConfirmModal: React.FC<ResetConfirmModalProps> = ({
             <span className="text-[#4ecdc4] font-bold">{completedCount} de {totalSectors}</span>
           </div>
           <p className="text-xs text-red-400 font-bold pt-2 border-t border-white/10 text-center">
-            Esta ação apagará todos os selos e pontos conquistados.
+            Esta ação apagará os selos atuais e gerará um conjunto com perguntas inéditas e variadas em todos os setores!
           </p>
         </div>
 

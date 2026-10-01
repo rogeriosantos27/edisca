@@ -8,10 +8,10 @@ export const questsData: Record<string, QuestRoom> = {
     intro: "Bem-vindos à portaria da EDISCA! Somos o Professor Junior e o Professor Cris. Nosso trabalho é garantir a segurança e o acesso correto de todos. Vamos testar sua lógica de organização?",
     questions: [
       {
-        q: "Na entrada da EDISCA, quatro educandos chegaram à portaria. Sofia entrou antes de Miguel. Ana entrou depois de Miguel, mas antes de Lucas. Quem foi o terceiro a passar pela catraca?",
+        q: "Na entrada da EDISCA, quatro educandos chegaram à portaria. Sofia entrou antes de Miguel. Ana entrou depois de Miguel, mas antes de Lucas. Quem foi o terceiro a ser acolhido no portão de entrada?",
         opts: ["Sofia", "Miguel", "Ana", "Lucas"],
         ans: 2,
-        exp: "A ordem correta é: Sofia → Miguel → Ana → Lucas. Portanto, a terceira pessoa a passar pela catraca foi Ana."
+        exp: "A ordem correta é: Sofia → Miguel → Ana → Lucas. Portanto, a terceira pessoa a ser acolhida no portão foi Ana."
       },
       {
         q: "A equipe da portaria precisa localizar um educando. Eles sabem apenas que ele não está na recepção, nem na biblioteca, e que ainda não foi para o refeitório. Em qual lugar ele provavelmente está?",
